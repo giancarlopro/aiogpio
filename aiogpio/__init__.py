@@ -4,7 +4,9 @@ import aiofiles
 class GPIO:
     @classmethod
     async def read(cls, gpio_num):
-        async with aiofiles.open(f"/sys/class/gpio/gpio{gpio_num}/value", 'r') as f:
+        async with aiofiles.open(
+            f"/sys/class/gpio/gpio{gpio_num}/value", 'r'
+        ) as f:
             return await f.read()
 
     @classmethod
@@ -22,19 +24,24 @@ class GPIO:
 
 
 class Pin:
-    def __init__(self, number, direction):
+    def __init__(self, number):
         self.number = number
-        self.direction = direction
 
-    async def set_direction(self, direction='in'):
+    async def as_input(self):
+        self._direction = 'in'
         await GPIO.export(self.number)
-        await GPIO.write(f"gpio{self.number}/direction", direction)
+        await GPIO.write(f"gpio{self.number}/direction", self._direction)
+
+    async def as_output(self):
+        self._direction = 'out'
+        await GPIO.export(self.number)
+        await GPIO.write(f"gpio{self.number}/direction", self._direction)
 
     async def on(self):
-        await GPIO.write(f"gpio{self.number}/value", '1')
+        await GPIO.write(f"gpio{self.number}/value", 1)
 
     async def off(self):
-        await GPIO.write(f"gpio{self.number}/value", '0')
+        await GPIO.write(f"gpio{self.number}/value", 0)
 
     async def read(self):
         return await GPIO.read(self.number)
